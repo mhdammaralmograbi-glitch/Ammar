@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reel - @ammar_dag</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  gap: 16px;
+}
+
+.player-wrap {
+  position: relative;
+  width: 390px;
+  height: 693px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 0 80px rgba(232,184,109,0.2), 0 0 0 1px rgba(255,255,255,0.07);
+}
+
+.reel {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s ease;
+}
+.scene.active { opacity: 1; pointer-events: all; }
+
+canvas.particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ── PROGRESS ── */
+.progress-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: transparent;
+  z-index: 100;
+  display: flex;
+  gap: 4px;
+  padding: 0 14px;
+  padding-top: 10px;
+}
+.seg { flex:1; height:3px; background:rgba(255,255,255,0.18); border-radius:2px; overflow:hidden; }
+.seg-fill { height:100%; background:#e8b86d; width:0%; border-radius:2px; }
+
+/* ── PROFILE ── */
+.top-profile {
+  position: absolute;
+  top: 22px; left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+}
+.avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e8b86d, #c0923a);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  border: 2px solid rgba(255,255,255,0.25);
+  flex-shrink: 0;
+}
+.profile-name { font-size: 14px; font-weight: 700; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,0.9); }
+.profile-sub { font-size: 11px; color: rgba(255,255,255,0.55); }
+
+/* ── FLASH ── */
+.scene-flash {
+  position: absolute; inset:0;
+  background: #e8b86d;
+  opacity:0; pointer-events:none;
+  z-index:99;
+}
+
+/* ── GUITAR STRINGS ── */
+.guitar-bg {
+  position: absolute;
+  left: 0; right: 0; bottom: 140px;
+  height: 80px;
+  pointer-events: none;
+  opacity: 0.07;
+}
+.g-str {
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(to right, transparent 5%, #e8b86d 50%, transparent 95%);
+}
+.g-str:nth-child(1){top:0;animation:vib 2.1s ease-in-out infinite}
+.g-str:nth-child(2){top:14px;animation:vib 1.7s ease-in-out infinite .2s}
+.g-str:nth-child(3){top:28px;animation:vib 2.4s ease-in-out infinite .4s}
+.g-str:nth-child(4){top:42px;animation:vib 1.9s ease-in-out infinite .1s}
+.g-str:nth-child(5){top:56px;animation:vib 2.2s ease-in-out infinite .6s}
+.g-str:nth-child(6){top:70px;animation:vib 1.6s ease-in-out infinite .3s}
+@keyframes vib{0%,100%{transform:scaleY(1)}25%{transform:scaleY(3) translateY(-1px)}75%{transform:scaleY(2) translateY(1px)}}
+
+/* ── WAVE ── */
+.wave-wrap {
+  position: absolute; bottom:138px; left:50%; transform:translateX(-50%);
+  display:flex; gap:4px; align-items:flex-end; height:36px; opacity:0.2;
+}
+.wbar { width:4px; background:#e8b86d; border-radius:2px; animation:wb 1s ease-in-out infinite; }
+.wbar:nth-child(1){height:12px;animation-delay:0s}
+.wbar:nth-child(2){height:24px;animation-delay:.1s}
+.wbar:nth-child(3){height:36px;animation-delay:.2s}
+.wbar:nth-child(4){height:18px;animation-delay:.3s}
+.wbar:nth-child(5){height:30px;animation-delay:.15s}
+.wbar:nth-child(6){height:14px;animation-delay:.25s}
+.wbar:nth-child(7){height:28px;animation-delay:.05s}
+.wbar:nth-child(8){height:10px;animation-delay:.35s}
+@keyframes wb{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.25)}}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: absolute; bottom:0; left:0; right:0;
+  padding: 12px 18px 20px;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+  z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.dots { display:flex; gap:6px; }
+.dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.28); transition:all .3s; cursor:pointer; }
+.dot.active { background:#e8b86d; width:20px; border-radius:4px; }
+.nav-btns { display:flex; gap:8px; }
+.nbtn {
+  width:38px; height:38px; border-radius:50%;
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18);
+  color:#fff; font-size:17px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .2s; backdrop-filter:blur(8px);
+}
+.nbtn:hover { background:rgba(232,184,109,0.25); border-color:#e8b86d; }
+.abtn {
+  font-size:12px; color:rgba(255,255,255,0.6);
+  border:1px solid rgba(255,255,255,0.18); border-radius:20px;
+  padding:6px 13px; cursor:pointer; background:rgba(0,0,0,0.3);
+  transition:all .2s; white-space:nowrap;
+}
+.abtn.on { color:#e8b86d; border-color:#e8b86d; }
+
+/* ═══════════════════════════════
+   SCENE 1 — HOOK
+═══════════════════════════════ */
+#s1 { background: radial-gradient(ellipse at 55% 35%, #180e00 0%, #0a0700 55%, #000 100%); }
+
+#s1 .piano-row {
+  position: absolute; bottom:0; left:0; right:0; height:90px;
+  display:flex; align-items:flex-end; justify-content:center; gap:2px;
+  padding:0 10px; opacity:0.13;
+}
+.wk { flex:1; max-width:28px; height:85px; background:linear-gradient(to bottom,#f0ede0,#d0ccb8); border-radius:0 0 5px 5px; }
+.bk { width:18px; height:54px; background:#111; border-radius:0 0 3px 3px; margin:0 -9px; z-index:1; flex-shrink:0; }
+
+#s1 .h-eyebrow {
+  font-size:13px; font-weight:700; letter-spacing:4px; color:#e8b86d;
+  text-transform:uppercase; margin-bottom:20px;
+  opacity:0; transform:translateY(-12px);
+  transition:all .6s ease .1s;
+}
+#s1 .h-main {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:72px; line-height:1.0; color:#fff;
+  text-align:center; letter-spacing:2px;
+  opacity:0; transform:translateY(30px);
+  transition:all .8s cubic-bezier(.22,1,.36,1) .3s;
+}
+#s1 .h-main em { color:#e8b86d; font-style:normal; }
+#s1 .h-sub {
+  font-size:20px; color:rgba(255,255,255,0.5);
+  text-align:center; margin-top:18px; line-height:1.5;
+  padding:0 40px;
+  opacity:0; transform:translateY(16px);
+  transition:all .7s ease .8s;
+}
+#s1 .h-emoji {
+  font-size:64px; margin-bottom:16px;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+
+#s1.active .h-eyebrow,
+#s1.active .h-main,
+#s1.active .h-sub { opacity:1; transform:translateY(0); }
+
+/* ═══════════════════════════════
+   SCENE 2 — STAT
+═══════════════════════════════ */
+#s2 { background: radial-gradient(ellipse at 45% 55%, #1e0f00 0%, #0c0600 55%, #000 100%); }
+
+#s2 .ring {
+  position:absolute; border-radius:50%;
+  border:1.5px solid rgba(232,184,109,0.12);
+  animation:spin 10s linear infinite;
+}
+#s2 .ring1 { width:300px; height:300px; top:50%; left:50%; margin:-150px 0 0 -150px; }
+#s2 .ring2 { width:380px; height:380px; top:50%; left:50%; margin:-190px 0 0 -190px; animation-duration:16s; animation-direction:reverse; border-color:rgba(232,184,109,0.06); }
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#s2 .s-label {
+  font-size:13px; font-weight:700; letter-spacing:5px; color:#e8b86d;
+  text-transform:uppercase; margin-bottom:8px;
+  opacity:0; transition:all .5s ease .2s;
+}
+#s2 .s-num {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:150px; line-height:1;
+  background:linear-gradient(135deg,#e8b86d 0%,#fff5d0 45%,#b07020 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  opacity:0; transform:scale(0.55);
+  transition:all .85s cubic-bezier(.34,1.56,.64,1) .4s;
+}
+#s2 .s-text {
+  font-size:28px; font-weight:700; color:#fff;
+  text-align:center; line-height:1.4; padding:0 36px; margin-top:6px;
+  opacity:0; transform:translateY(18px);
+  transition:all .6s ease .95s;
+}
+#s2 .s-text span { color:#e8b86d; }
+#s2 .s-source {
+  font-size:14px; color:rgba(255,255,255,0.35);
+  margin-top:14px; letter-spacing:1px;
+  opacity:0; transition:all .5s ease 1.4s;
+}
+#s2.active .s-label,
+#s2.active .s-num,
+#s2.active .s-text,
+#s2.active .s-source { opacity:1; transform:scale(1) translateY(0); }
+
+/* ═══════════════════════════════
+   SCENE 3 — BENEFITS
+═══════════════════════════════ */
+#s3 { background: radial-gradient(ellipse at 50% 40%, #00101a 0%, #000a12 55%, #000 100%); }
+
+#s3 .b-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:38px; letter-spacing:3px; color:#e8b86d;
+  margin-bottom:24px;
+  opacity:0; transform:translateY(-16px);
+  transition:all .6s ease .1s;
+}
+#s3.active .b-title { opacity:1; transform:translateY(0); }
+
+.bitem {
+  display:flex; align-items:center; gap:16px;
+  width:340px;
+  background:rgba(255,255,255,0.035);
+  border:1px solid rgba(232,184,109,0.13);
+  border-radius:14px; padding:14px 18px;
+  margin-bottom:12px;
+  opacity:0; transform:translateX(-36px);
+  transition:all .6s cubic-bezier(.22,1,.36,1);
+}
+.bitem:nth-child(2){transition-delay:.25s}
+.bitem:nth-child(3){transition-delay:.45s}
+.bitem:nth-child(4){transition-delay:.65s}
+.bitem:nth-child(5){transition-delay:.85s}
+#s3.active .bitem { opacity:1; transform:translateX(0); }
+
+.bicon { font-size:30px; flex-shrink:0; }
+.btxt { font-size:18px; font-weight:700; color:#fff; line-height:1.25; }
+.btxt small { display:block; font-size:13px; font-weight:400; color:rgba(255,255,255,0.45); margin-top:2px; }
+
+/* ═══════════════════════════════
+   SCENE 4 — MOTIVATE (no CTA)
+═══════════════════════════════ */
+#s4 { background: radial-gradient(ellipse at 50% 50%, #0d0900 0%, #050300 60%, #000 100%); }
+
+#s4 .m-label {
+  font-size:13px; font-weight:700; letter-spacing:5px; color:rgba(255,255,255,0.4);
+  text-transform:uppercase; margin-bottom:14px;
+  opacity:0; transform:translateY(-10px);
+  transition:all .5s ease .1s;
+}
+#s4 .m-quote {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:64px; line-height:1.05; color:#fff;
+  text-align:center; letter-spacing:2px; padding:0 28px;
+  opacity:0; transform:scale(0.85);
+  transition:all .9s cubic-bezier(.22,1,.36,1) .35s;
+}
+#s4 .m-quote em { color:#e8b86d; font-style:normal; display:block; }
+#s4 .m-sub {
+  font-size:20px; font-weight:400; color:rgba(255,255,255,0.55);
+  text-align:center; margin-top:22px; line-height:1.6; padding:0 36px;
+  opacity:0; transform:translateY(16px);
+  transition:all .7s ease .95s;
+}
+#s4 .m-divider {
+  width:60px; height:2px;
+  background:linear-gradient(to right,transparent,#e8b86d,transparent);
+  margin:22px 0 20px;
+  opacity:0; transition:all .5s ease 1.3s;
+}
+#s4 .m-handle {
+  font-size:18px; font-weight:700; color:#e8b86d;
+  letter-spacing:2px;
+  opacity:0; transition:all .6s ease 1.5s;
+}
+#s4 .m-tag {
+  font-size:13px; color:rgba(255,255,255,0.3);
+  letter-spacing:1px; margin-top:6px;
+  opacity:0; transition:all .5s ease 1.7s;
+}
+#s4.active .m-label,
+#s4.active .m-quote,
+#s4.active .m-sub,
+#s4.active .m-divider,
+#s4.active .m-handle,
+#s4.active .m-tag { opacity:1; transform:scale(1) translateY(0); }
+
+/* ── OUTSIDE ── */
+.outside {
+  display:flex; gap:10px; align-items:center;
+}
+.obtn {
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.13);
+  color:#fff; padding:9px 22px; border-radius:30px; cursor:pointer;
+  font-family:'DM Sans',sans-serif; font-size:13px; transition:all .2s;
+}
+.obtn:hover { background:rgba(232,184,109,0.18); border-color:#e8b86d; color:#e8b86d; }
+.obtn.primary { background:rgba(232,184,109,0.12); border-color:#e8b86d; color:#e8b86d; }
+</style>
+</head>
+<body>
+
+<div class="player-wrap">
+<div class="reel" id="reel">
+
+  <div class="progress-bar">
+    <div class="seg"><div class="seg-fill" id="f0"></div></div>
+    <div class="seg"><div class="seg-fill" id="f1"></div></div>
+    <div class="seg"><div class="seg-fill" id="f2"></div></div>
+    <div class="seg"><div class="seg-fill" id="f3"></div></div>
+  </div>
+
+  <div class="scene-flash" id="flash"></div>
+
+  <div class="guitar-bg">
+    <div class="g-str"></div><div class="g-str"></div><div class="g-str"></div>
+    <div class="g-str"></div><div class="g-str"></div><div class="g-str"></div>
+  </div>
+
+  <div class="wave-wrap">
+    <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+    <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+    <div class="wbar"></div><div class="wbar"></div>
+  </div>
+
+  <!-- SCENE 1: HOOK -->
+  <div class="scene active" id="s1">
+    <canvas class="particles" id="c1"></canvas>
+    <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;">
+      <div class="h-emoji">🧠</div>
+      <div class="h-eyebrow">Did you know?</div>
+      <div class="h-main">Music<br><em>Changes</em><br>Your Brain</div>
+      <div class="h-sub">Science has something<br>incredible to tell you</div>
+    </div>
+    <div class="piano-row" id="pianoRow"></div>
+  </div>
+
+  <!-- SCENE 2: STAT -->
+  <div class="scene" id="s2">
+    <canvas class="particles" id="c2"></canvas>
+    <div class="ring ring1"></div>
+    <div class="ring ring2"></div>
+    <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;">
+      <div class="s-label">📊 Research Shows</div>
+      <div class="s-num">89%</div>
+      <div class="s-text">of children who learned music<br>showed higher <span>IQ scores</span><br>and stronger focus</div>
+      <div class="s-source">— Nature Neuroscience</div>
+    </div>
+  </div>
+
+  <!-- SCENE 3: BENEFITS -->
+  <div class="scene" id="s3">
+    <canvas class="particles" id="c3"></canvas>
+    <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding:0 8px;">
+      <div class="b-title">What Music Does To You</div>
+      <div class="bitem">
+        <div class="bicon">🧠</div>
+        <div class="btxt">Boosts Intelligence
+          <small>Activates both brain hemispheres</small>
+        </div>
+      </div>
+      <div class="bitem">
+        <div class="bicon">🎯</div>
+        <div class="btxt">Sharpens Focus
+          <small>Improves attention & reaction time</small>
+        </div>
+      </div>
+      <div class="bitem">
+        <div class="bicon">😌</div>
+        <div class="btxt">Reduces Stress
+          <small>Releases dopamine & serotonin</small>
+        </div>
+      </div>
+      <div class="bitem">
+        <div class="bicon">✨</div>
+        <div class="btxt">Unlocks Creativity
+          <small>Strengthens memory & expression</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 4: MOTIVATE -->
+  <div class="scene" id="s4">
+    <canvas class="particles" id="c4"></canvas>
+    <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;">
+      <div class="m-label">Remember This</div>
+      <div class="m-quote">It's never<br><em>too late</em><br>to start</div>
+      <div class="m-sub">Every great musician<br>once played their<br>very first note.</div>
+      <div class="m-divider"></div>
+      <div class="m-handle">@ammar_dag</div>
+      <div class="m-tag">Piano · Guitar · Music</div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="dots">
+      <div class="dot active" id="d0" onclick="goTo(0)"></div>
+      <div class="dot" id="d1" onclick="goTo(1)"></div>
+      <div class="dot" id="d2" onclick="goTo(2)"></div>
+      <div class="dot" id="d3" onclick="goTo(3)"></div>
+    </div>
+    <div class="nav-btns">
+      <div class="nbtn" onclick="prev()">‹</div>
+      <div class="abtn on" id="abtn" onclick="toggleAuto()">▶ Auto</div>
+      <div class="nbtn" onclick="next()">›</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="outside">
+  <div class="obtn" onclick="prev()">◀ Prev</div>
+  <div class="obtn primary" id="oabtn" onclick="toggleAuto()">⏸ Pause</div>
+  <div class="obtn" onclick="next()">Next ▶</div>
+</div>
+
+<script>
+// Piano keys
+(function(){
+  const row = document.getElementById('pianoRow');
+  const pat = [0,1,0,1,0,0,1,0,1,0,1,0];
+  for(let i=0;i<28;i++){
+    const d = document.createElement('div');
+    d.className = pat[i%12] ? 'bk' : 'wk';
+    row.appendChild(d);
+  }
+})();
+
+// Particles
+function initP(id, color, n){
+  const c = document.getElementById(id);
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  c.width=390; c.height=693;
+  const pts = Array.from({length:n},()=>({
+    x:Math.random()*390, y:Math.random()*693,
+    r:Math.random()*2+0.4,
+    dx:(Math.random()-.5)*.35,
+    dy:(Math.random()-.5)*.35,
+    a:Math.random()*.5
+  }));
+  (function draw(){
+    ctx.clearRect(0,0,390,693);
+    pts.forEach(p=>{
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=color+Math.floor(p.a*255).toString(16).padStart(2,'0');
+      ctx.fill();
+      p.x+=p.dx; p.y+=p.dy;
+      p.a+=(Math.random()-.5)*.015;
+      p.a=Math.max(.04,Math.min(.55,p.a));
+      if(p.x<0)p.x=390; if(p.x>390)p.x=0;
+      if(p.y<0)p.y=693; if(p.y>693)p.y=0;
+    });
+    requestAnimationFrame(draw);
+  })();
+}
+initP('c1','#e8b86d',28);
+initP('c2','#ffd080',22);
+initP('c3','#70b8ff',22);
+initP('c4','#e8b86d',40);
+
+// Logic
+const IDS = ['s1','s2','s3','s4'];
+const DUR = [4000,4500,5000,5000];
+let cur=0, auto=true, timer=null;
+
+function fillStart(i,d){
+  const f=document.getElementById('f'+i);
+  if(!f)return;
+  f.style.transition='none'; f.style.width='0%';
+  setTimeout(()=>{ f.style.transition=`width ${d}ms linear`; f.style.width='100%'; },30);
+}
+function fillDone(i){ const f=document.getElementById('f'+i); if(f){f.style.transition='none';f.style.width='100%';} }
+function fillReset(i){ const f=document.getElementById('f'+i); if(f){f.style.transition='none';f.style.width='0%';} }
+
+function goTo(idx){
+  clearTimeout(timer);
+  const fl=document.getElementById('flash');
+  fl.style.opacity='0.12';
+  setTimeout(()=>fl.style.transition='opacity .4s', 10);
+  setTimeout(()=>{ fl.style.opacity='0'; setTimeout(()=>fl.style.transition='',400); }, 80);
+
+  document.getElementById(IDS[cur]).classList.remove('active');
+  document.getElementById('d'+cur).classList.remove('active');
+  fillDone(cur);
+  cur=idx;
+  document.getElementById(IDS[cur]).classList.add('active');
+  document.getElementById('d'+cur).classList.add('active');
+  fillStart(cur, DUR[cur]);
+  if(auto) timer=setTimeout(next, DUR[cur]);
+}
+function next(){ goTo((cur+1)%4); }
+function prev(){ goTo((cur-1+4)%4); }
+function toggleAuto(){
+  auto=!auto;
+  const a=document.getElementById('abtn'), o=document.getElementById('oabtn');
+  if(auto){
+    a.textContent='▶ Auto'; a.classList.add('on');
+    o.textContent='⏸ Pause';
+    fillStart(cur,DUR[cur]);
+    timer=setTimeout(next,DUR[cur]);
+  } else {
+    a.textContent='⏸ Paused'; a.classList.remove('on');
+    o.textContent='▶ Play';
+    clearTimeout(timer);
+    const f=document.getElementById('f'+cur); if(f)f.style.transition='none';
+  }
+}
+
+fillStart(0,DUR[0]);
+timer=setTimeout(next,DUR[0]);
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') next();
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp') prev();
+  else if(e.key===' ') toggleAuto();
+});
+</script>
+</body>
+</html>
